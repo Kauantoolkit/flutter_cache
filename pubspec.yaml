@@ -1,0 +1,15 @@
+name: flutter_problematico_catalog
+version: 1.0.0+1
+publish_to: 'none'
+description: Projeto Flutter propositalmente problemático para aula sobre cache, latência e responsividade.
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.1
+
+flutter:
+  uses-material-design: true
