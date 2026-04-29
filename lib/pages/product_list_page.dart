@@ -14,7 +14,6 @@ class ProductListPage extends StatefulWidget {
 class _ProductListPageState extends State<ProductListPage> {
   final _service = ProductService();
 
-  bool isLoading = false;
   bool isRefreshing = false;
   String? errorMessage;
   List<Product> products = [];
@@ -26,20 +25,16 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   Future<void> _loadProducts() async {
+    final cached = await _service.fetchFromCache();
+    if (cached.isNotEmpty && mounted) {
+      setState(() => products = cached);
+    }
+
     setState(() {
-      isLoading = products.isEmpty;
+      isRefreshing = true;
       errorMessage = null;
     });
 
-    final cached = await _service.fetchFromCache();
-    if (cached.isNotEmpty && mounted) {
-      setState(() {
-        products = cached;
-        isLoading = false;
-      });
-    }
-
-    setState(() => isRefreshing = true);
     try {
       final fresh = await _service.fetchFromApi();
       if (mounted) setState(() => products = fresh);
@@ -50,8 +45,6 @@ class _ProductListPageState extends State<ProductListPage> {
     } finally {
       if (mounted) setState(() => isRefreshing = false);
     }
-
-    if (mounted) setState(() => isLoading = false);
   }
 
   void _openDetails(Product product) {
@@ -74,86 +67,84 @@ class _ProductListPageState extends State<ProductListPage> {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
+            )
+          else
+            IconButton(
+              onPressed: _loadProducts,
+              icon: const Icon(Icons.refresh),
             ),
-          IconButton(
-            onPressed: _loadProducts,
-            icon: const Icon(Icons.refresh),
-          ),
         ],
       ),
-      body: Builder(
-        builder: (context) {
-          if (isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: _buildBody(),
+    );
+  }
 
-          if (errorMessage != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(errorMessage!, textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _loadProducts,
-                      child: const Text('Tentar novamente'),
-                    ),
-                  ],
-                ),
+  Widget _buildBody() {
+    if (products.isEmpty && isRefreshing) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (products.isEmpty && errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(errorMessage!, textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _loadProducts,
+                child: const Text('Tentar novamente'),
               ),
-            );
-          }
+            ],
+          ),
+        ),
+      );
+    }
 
-          return ListView.separated(
-            itemCount: products.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ListTile(
-                contentPadding: const EdgeInsets.all(12),
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    product.thumbnail,
-                    width: 72,
-                    height: 72,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 72,
-                        height: 72,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.broken_image),
-                      );
-                    },
-                  ),
-                ),
-                title: Text(
-                  product.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  '${product.category} • R\$ ${product.price.toStringAsFixed(2)}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onTap: () => _openDetails(product),
-              );
-            },
-          );
-        },
-      ),
+    return ListView.separated(
+      itemCount: products.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.all(12),
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              product.thumbnail,
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 72,
+                  height: 72,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.broken_image),
+                );
+              },
+            ),
+          ),
+          title: Text(
+            product.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '${product.category} • R\$ ${product.price.toStringAsFixed(2)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap: () => _openDetails(product),
+        );
+      },
     );
   }
 }
