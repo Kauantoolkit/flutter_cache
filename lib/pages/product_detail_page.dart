@@ -87,8 +87,12 @@ class _RatingRow extends StatelessWidget {
     return Row(
       children: [
         ...List.generate(5, (i) {
-          if (i < stars.floor()) return const Icon(Icons.star, size: 18, color: Colors.amber);
-          if (i < stars) return const Icon(Icons.star_half, size: 18, color: Colors.amber);
+          if (i < stars.floor()) {
+            return const Icon(Icons.star, size: 18, color: Colors.amber);
+          }
+          if (i < stars) {
+            return const Icon(Icons.star_half, size: 18, color: Colors.amber);
+          }
           return const Icon(Icons.star_border, size: 18, color: Colors.amber);
         }),
         const SizedBox(width: 6),
