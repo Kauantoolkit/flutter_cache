@@ -15,32 +15,46 @@ class _ProductListPageState extends State<ProductListPage> {
   final _service = ProductService();
 
   bool isLoading = false;
+  bool isRefreshing = false;
   String? errorMessage;
   List<Product> products = [];
 
   @override
   void initState() {
     super.initState();
-    loadProducts();
+    _loadProducts();
   }
 
-  Future<void> loadProducts() async {
+  Future<void> _loadProducts() async {
     setState(() {
-      isLoading = true;
+      isLoading = products.isEmpty;
       errorMessage = null;
     });
 
-    try {
-      final result = await _service.fetchFromApi();
-      setState(() => products = result);
-    } catch (e) {
-      setState(() => errorMessage = 'Falha ao carregar produtos: $e');
-    } finally {
-      setState(() => isLoading = false);
+    final cached = await _service.fetchFromCache();
+    if (cached.isNotEmpty && mounted) {
+      setState(() {
+        products = cached;
+        isLoading = false;
+      });
     }
+
+    setState(() => isRefreshing = true);
+    try {
+      final fresh = await _service.fetchFromApi();
+      if (mounted) setState(() => products = fresh);
+    } catch (e) {
+      if (products.isEmpty && mounted) {
+        setState(() => errorMessage = 'Falha ao carregar produtos: $e');
+      }
+    } finally {
+      if (mounted) setState(() => isRefreshing = false);
+    }
+
+    if (mounted) setState(() => isLoading = false);
   }
 
-  void openDetails(Product product) {
+  void _openDetails(Product product) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -55,8 +69,22 @@ class _ProductListPageState extends State<ProductListPage> {
       appBar: AppBar(
         title: const Text('Catálogo'),
         actions: [
+          if (isRefreshing)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
           IconButton(
-            onPressed: loadProducts,
+            onPressed: _loadProducts,
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -77,7 +105,7 @@ class _ProductListPageState extends State<ProductListPage> {
                     Text(errorMessage!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: loadProducts,
+                      onPressed: _loadProducts,
                       child: const Text('Tentar novamente'),
                     ),
                   ],
@@ -120,7 +148,7 @@ class _ProductListPageState extends State<ProductListPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                onTap: () => openDetails(product),
+                onTap: () => _openDetails(product),
               );
             },
           );
