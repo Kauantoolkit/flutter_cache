@@ -149,16 +149,6 @@ class _ProductListPageState extends State<ProductListPage> {
                     ),
                   ),
                 ),
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 72,
-                        height: 72,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.broken_image),
-                      );
-                    },
-                  ),
-                ),
                 title: Text(
                   product.title,
                   maxLines: 1,
