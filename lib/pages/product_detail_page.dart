@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/product.dart';
 
@@ -22,18 +23,20 @@ class ProductDetailPage extends StatelessWidget {
               child: PageView.builder(
                 itemCount: product.images.length,
                 itemBuilder: (context, index) {
-                  return Image.network(
-                    product.images[index],
+                  return CachedNetworkImage(
+                    imageUrl: product.images[index],
                     fit: BoxFit.cover,
                     width: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade300,
-                        child: const Center(
-                          child: Icon(Icons.broken_image, size: 48),
-                        ),
-                      );
-                    },
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey.shade200,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey.shade300,
+                      child: const Center(
+                        child: Icon(Icons.broken_image, size: 48),
+                      ),
+                    ),
                   );
                 },
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/product.dart';
 import '../services/product_service.dart';
@@ -117,19 +118,29 @@ class _ProductListPageState extends State<ProductListPage> {
           contentPadding: const EdgeInsets.all(12),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              product.thumbnail,
+            child: CachedNetworkImage(
+              imageUrl: product.thumbnail,
               width: 72,
               height: 72,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.broken_image),
-                );
-              },
+              placeholder: (context, url) => Container(
+                width: 72,
+                height: 72,
+                color: Colors.grey.shade200,
+                child: const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: 72,
+                height: 72,
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.broken_image),
+              ),
             ),
           ),
           title: Text(
