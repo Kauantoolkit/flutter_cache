@@ -61,18 +61,11 @@ class ProductDetailPage extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Avaliação: ${product.rating.toStringAsFixed(1)}',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
+                  _RatingRow(rating: product.rating),
                   const SizedBox(height: 16),
                   Text(
                     product.description,
                     style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Observação didática: ao voltar desta tela, a lista principal será recarregada por completo.',
                   ),
                 ],
               ),
@@ -80,6 +73,30 @@ class ProductDetailPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RatingRow extends StatelessWidget {
+  final double rating;
+  const _RatingRow({required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    final stars = rating / 2;
+    return Row(
+      children: [
+        ...List.generate(5, (i) {
+          if (i < stars.floor()) return const Icon(Icons.star, size: 18, color: Colors.amber);
+          if (i < stars) return const Icon(Icons.star_half, size: 18, color: Colors.amber);
+          return const Icon(Icons.star_border, size: 18, color: Colors.amber);
+        }),
+        const SizedBox(width: 6),
+        Text(
+          rating.toStringAsFixed(1),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 }
